@@ -36,7 +36,7 @@ const inline std::string WorkingDirectory = get_working_directory();
 
 void dynamic_library_impl()
 {
-	Dylib lib("libgame.dylib");
+	Dylib lib("libgame");
 
 	auto size = lib.load<size_t (*)()>("get_registry_size")();
 	std::println("Number of registered functions: ", size);

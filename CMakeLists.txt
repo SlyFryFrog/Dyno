@@ -53,26 +53,22 @@ find_package(JlCxx REQUIRED)
 # Define imported Julia library
 add_library(Julia::julia SHARED IMPORTED)
 if(APPLE)
-    set_target_properties(
-            Julia::julia
-            PROPERTIES
-            IMPORTED_LOCATION "${JULIA_LIB_DIR}/libjulia.dylib"
-            INTERFACE_INCLUDE_DIRECTORIES "${JULIA_INCLUDE_DIR}"
-            INTERFACE_LINK_DIRECTORIES "${JULIA_LIB_DIR}"
-            INSTALL_RPATH "${JULIA_LIB_DIR}"
-            BUILD_RPATH "${JULIA_LIB_DIR}"
-    )
-elseif (UNIX)
-    set_target_properties(
-            Julia::julia
-            PROPERTIES
-            IMPORTED_LOCATION "${JULIA_LIB_DIR}/libjulia.so"
-            INTERFACE_INCLUDE_DIRECTORIES "${JULIA_INCLUDE_DIR}"
-            INTERFACE_LINK_DIRECTORIES "${JULIA_LIB_DIR}"
-            INSTALL_RPATH "${JULIA_LIB_DIR}"
-            BUILD_RPATH "${JULIA_LIB_DIR}"
-    )
+    set(JULIA_LIB "${JULIA_LIB_DIR}/libjulia.dylib")
+elseif(WIN32)
+    set(JULIA_LIB "${JULIA_LIB_DIR}/libjulia.dll")
+else()
+    set(JULIA_LIB "${JULIA_LIB_DIR}/libjulia.so")
 endif()
+
+set_target_properties(
+        Julia::julia
+        PROPERTIES
+        IMPORTED_LOCATION "${JULIA_LIB}"
+        INTERFACE_INCLUDE_DIRECTORIES "${JULIA_INCLUDE_DIR}"
+        INTERFACE_LINK_DIRECTORIES "${JULIA_LIB_DIR}"
+        INSTALL_RPATH "${JULIA_LIB_DIR}"
+        BUILD_RPATH "${JULIA_LIB_DIR}"
+)
 
 #####################
 # Compiler settings #

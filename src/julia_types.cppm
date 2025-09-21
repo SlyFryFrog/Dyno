@@ -5,6 +5,7 @@ module;
 #include <list>
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>

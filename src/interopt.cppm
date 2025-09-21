@@ -1,4 +1,6 @@
 module;
+#include <cstdint>
+#include <cstring>
 #include <vector>
 export module dyno:interopt;
 
