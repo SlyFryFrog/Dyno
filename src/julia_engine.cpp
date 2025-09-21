@@ -80,29 +80,5 @@ namespace Dyno::Julia
 		return result;
 	}
 
-	jl_value_t* call_function(Dyno::Dylib& lib, const std::string& name,
-							  std::vector<jl_value_t*>& args)
-	{
-		using generic_call_t = jl_value_t* (*)(const char*, jl_value_t**, int);
-		const auto generic_call = lib.load<generic_call_t>("generic_call");
 
-		return generic_call(name.c_str(), args.data(), args.size());
-	}
-
-	std::string get_concrete_type_name(jl_value_t* variable)
-	{
-		jl_value_t* type = jl_typeof(variable);
-		const auto* datatype = reinterpret_cast<jl_datatype_t*>(type);
-		return jl_symbol_name(datatype->name->name);
-	}
-
-	std::string get_immediate_supertype_name(jl_value_t* variable)
-	{
-		jl_value_t* type = jl_typeof(variable);
-		jl_function_t* supertype_fn = jl_get_function(jl_base_module, "supertype");
-		jl_value_t* result = jl_call1(supertype_fn, type);
-
-		const auto* datatype = reinterpret_cast<jl_datatype_t*>(result);
-		return jl_symbol_name(datatype->name->name);
-	}
-} // namespace Julia
+} // namespace Dyno::Julia

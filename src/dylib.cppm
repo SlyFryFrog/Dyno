@@ -23,7 +23,7 @@ namespace Dyno
 			void* sym = dlsym(m_handle, name.c_str());
 			if (const char* err = dlerror())
 			{
-				throw std::runtime_error(std::string("Failed to load symbol '") + name +
+				throw std::runtime_error("Failed to load symbol '" + name +
 										 "': " + err);
 			}
 			if (!sym)

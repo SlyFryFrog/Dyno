@@ -1,9 +1,9 @@
 #include <filesystem>
 #include <iostream>
 #include <julia.h>
+#include <print>
 #include <stdexcept>
 #include <string>
-#include <print>
 
 #if defined(__APPLE__)
 #include <mach-o/dyld.h>
@@ -38,42 +38,33 @@ void dynamic_library_impl()
 {
 	Dylib lib("libgame.dylib");
 
-	using get_registry_t = jl_value_t* (*)();
+	auto size = lib.load<size_t (*)()>("get_registry_size")();
+	std::println("Number of registered functions: ", size);
 
-	auto get_registry = lib.load<get_registry_t>("get_registry");
+	auto keys = lib.load<const char** (*)()>("get_registry_keys")();
 
-	// Get the registry (Dict)
-	jl_value_t* dict = get_registry();
-
-	// Get Base.keys(dict)
-	jl_function_t* keys_fn = jl_get_function(jl_base_module, "keys");
-	jl_value_t* keyset = jl_call1(keys_fn, dict);
-
-	// Convert KeySet -> Array
-	jl_function_t* collect_fn = jl_get_function(jl_base_module, "collect");
-	jl_array_t* keys = (jl_array_t*)jl_call1(collect_fn, keyset);
-
-	if (jl_exception_occurred())
+	// Iterate over the keys
+	std::println("Registered Functions: ");
+	for (size_t i = 0; i < size; ++i)
 	{
-		std::println(std::cerr, "Error getting keys: {}", jl_typeof_str(jl_exception_occurred()));
-		return;
+		std::println("\t{}", keys[i]);
 	}
 
-	// Now it’s safe to iterate
-	size_t len = jl_array_len(keys);
-	jl_value_t** data = jl_array_data(keys, jl_value_t*);
 
-	for (size_t i = 0; i < len; i++)
-	{
-		jl_value_t* key = data[i];
-		if (jl_is_string(key))
-		{
-			std::println("{}", jl_string_ptr(key));
-		}
-	}
+	auto ret = lib.load<int (*)()>("jl_GameA__init")();
 
-	Julia::call_function(lib, "GameA._process", 0.016);
-	Julia::call_function(lib, "GameB._process", 0.016);
+	lib.load<void (*)(void*, int)>("jl_GameB__process")(pack_args(35.9).data(), 1);
+
+	lib.load<void (*)(void*, int)>("jl_GameB_my_func")(pack_args(3, 4, 6.4).data(), 3);
+
+	double args = 40.6;
+
+	auto process_ret = lib.load<double (*)(void*, int)>("jl_GameA__process")(&args, 1);
+
+	int arg1 = 2;
+	std::vector my_func_args = {(void*)&arg1};
+	auto returnVal = lib.load<int (*)(void*, int)>("jl_GameA_my_func_int")(my_func_args.data(), 1);
+
 
 	lib.unload();
 }
@@ -81,39 +72,7 @@ void dynamic_library_impl()
 void julia_engine_impl()
 {
 	Julia::init();
-	Julia::load_script("scripts/main.jl");
-
-	auto dict = Julia::call_function("Dyno.Dispatcher", "get_registry", nullptr);
-
-	jl_function_t* keys_fn = jl_get_function(jl_base_module, "keys");
-	jl_value_t* keyset = jl_call1(keys_fn, dict);
-
-	// Convert KeySet -> Array
-	jl_function_t* collect_fn = jl_get_function(jl_base_module, "collect");
-	jl_array_t* keys = (jl_array_t*)jl_call1(collect_fn, keyset);
-
-	if (jl_exception_occurred())
-	{
-		std::println(std::cerr, "Error getting keys: {}", jl_typeof_str(jl_exception_occurred()));
-		return;
-	}
-
-	// Now it’s safe to iterate
-	size_t len = jl_array_len(keys);
-	jl_value_t** data = jl_array_data(keys, jl_value_t*);
-
-	for (size_t i = 0; i < len; i++)
-	{
-		jl_value_t* key = data[i];
-		if (jl_is_string(key))
-		{
-			std::println("{}", jl_string_ptr(key));
-		}
-	}
-
-	auto args = std::vector{Julia::box_arg(23.0)};
-	Julia::call_function("GameA", "_process", &args);
-
+	Julia::load_script("scripts/precompile.jl");
 	Julia::shutdown();
 }
 
@@ -121,6 +80,7 @@ int main()
 {
 	std::filesystem::current_path(WorkingDirectory);
 
-	dynamic_library_impl();
+	// Running both JIT and AOT runtimes does not work, you must choose 1
 	//julia_engine_impl();
+	dynamic_library_impl();
 }
