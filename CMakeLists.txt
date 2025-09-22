@@ -69,7 +69,6 @@ set_target_properties(
         INSTALL_RPATH "${JULIA_LIB_DIR}"
         BUILD_RPATH "${JULIA_LIB_DIR}"
 )
-
 #####################
 # Compiler settings #
 #####################
@@ -95,9 +94,7 @@ file(GLOB_RECURSE MODULES
 # Target: executable #
 ######################
 
-add_executable(${PROJECT_NAME}
-	${SOURCES}
-)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 if (MODULES)
     target_sources(${PROJECT_NAME}
@@ -109,7 +106,7 @@ if (MODULES)
 endif()
 
 target_link_libraries(${PROJECT_NAME}
-        PUBLIC
+        PRIVATE
             JlCxx::cxxwrap_julia
             JlCxx::cxxwrap_julia_stl
             Julia::julia
@@ -127,21 +124,4 @@ target_link_options(${PROJECT_NAME} PRIVATE ${JULIA_LDFLAGS} ${JULIA_LDLIBS})
 # Enable C++23
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 
-##################
-# Copy resources #
-##################
-
-if (1)
-foreach(dir scripts)
-    add_custom_command(
-            TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E remove_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/${dir}
-            COMMAND ${CMAKE_COMMAND} -E create_symlink
-            ${CMAKE_CURRENT_SOURCE_DIR}/${dir}
-            $<TARGET_FILE_DIR:${PROJECT_NAME}>/${dir}
-            COMMENT "Symlinking ./${dir} -> build/Debug/${dir}"
-    )
-endforeach()
-else()
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/scripts DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-endif()
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)

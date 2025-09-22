@@ -124,7 +124,6 @@ export namespace Dyno::Julia
 		return box_arg(std::map<K, V>(m.begin(), m.end()));
 	}
 
-
 	template <typename T>
 	jl_value_t* box_arg(const T&)
 	{

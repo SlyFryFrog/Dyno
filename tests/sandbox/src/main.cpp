@@ -81,6 +81,6 @@ int main()
 	std::filesystem::current_path(WorkingDirectory);
 
 	// Running both JIT and AOT runtimes does not work, you must choose 1
-	//julia_engine_impl();
-	dynamic_library_impl();
+	julia_engine_impl();
+	//dynamic_library_impl();
 }
